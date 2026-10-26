@@ -1,0 +1,554 @@
+// MedFinance AI — modelo de dados (PostgreSQL)
+// Convenções:
+//  - Todo registro de negócio pertence a um usuário (userId) => isolamento por consulta.
+//  - Valores monetários: Decimal(14,2). Percentuais: Decimal(7,4).
+//  - Datas financeiras são DATE (sem fuso). Timestamps de auditoria são timestamptz.
+//  - Valores calculados (bruto/líquido/imposto) NÃO são persistidos: são derivados
+//    pelo @medfinance/core a partir dos insumos + perfil tributário vigente.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContractType {
+  CLT
+  PJ
+  PF
+  COOPERATIVA
+  OUTRO
+}
+
+enum InstitutionKind {
+  HOSPITAL
+  CLINICA
+  UNIVERSIDADE
+  TELEMEDICINA
+  OPERADORA
+  OUTRO
+}
+
+enum TaxRegime {
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+  NAO_INFORMADO
+}
+
+enum TaxScope {
+  PF
+  PJ
+  CLT
+  OUTRO
+}
+
+enum TaxConfidence {
+  ESTIMATED
+  CONFIRMED
+}
+
+enum ShiftType {
+  DIURNO
+  NOTURNO
+  FIM_DE_SEMANA
+  FERIADO
+  SOBREAVISO
+}
+
+enum ShiftStatus {
+  AGENDADO
+  REALIZADO
+  FATURADO
+  A_RECEBER
+  RECEBIDO
+  ATRASADO
+  CANCELADO
+}
+
+enum PricingMode {
+  PER_SHIFT
+  PER_HOUR
+}
+
+enum IncomeCategory {
+  CONSULTA
+  PROCEDIMENTO
+  CIRURGIA
+  AULA_PRECEPTORIA
+  PARECER
+  TELEMEDICINA
+  BONIFICACAO
+  DISTRIBUICAO_LUCROS
+  PRO_LABORE
+  RENDIMENTO
+  OUTRA
+}
+
+enum IncomeStatus {
+  PREVISTO
+  RECEBIDO
+  CANCELADO
+}
+
+enum SalaryPaymentStatus {
+  RECEBIDO
+  CANCELADO
+}
+
+enum ExpenseScope {
+  PESSOAL
+  PROFISSIONAL
+}
+
+enum ExpenseStatus {
+  PENDENTE
+  PAGO
+  CANCELADO
+}
+
+enum PaymentMethod {
+  PIX
+  DEBITO
+  BOLETO
+  DINHEIRO
+  TRANSFERENCIA
+  CARTAO_CREDITO
+  DEBITO_AUTOMATICO
+}
+
+enum AccountKind {
+  CORRENTE
+  POUPANCA
+  PAGAMENTO
+  INVESTIMENTO
+  OUTRA
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  mfaEnabled   Boolean  @default(false)
+  /// Segredo TOTP criptografado (AES-256-GCM) — nunca em texto puro
+  mfaSecretEnc String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile            Profile?
+  sessions           Session[]
+  companies          Company[]
+  institutions       Institution[]
+  taxProfiles        TaxProfile[]
+  contracts          Contract[]
+  shiftRates         ShiftRate[]
+  shiftSeries        ShiftSeries[]
+  shifts             Shift[]
+  salaryPayments     SalaryPayment[]
+  incomes            Income[]
+  expenseCategories  ExpenseCategory[]
+  expenses           Expense[]
+  creditCards        CreditCard[]
+  cardInvoicePayments CardInvoicePayment[]
+  bankAccounts       BankAccount[]
+  goals              Goal[]
+  auditLogs          AuditLog[]
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  /// SHA-256 do token (o token em si só existe no cookie do cliente)
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  userAgent  String?
+  ip         String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Profile {
+  userId                 String   @id
+  specialty              String?
+  crm                    String?
+  estimatedMonthlyIncome Decimal? @db.Decimal(14, 2)
+  emergencyReserveTarget Decimal? @db.Decimal(14, 2)
+  /// Patrimônio e investimentos declarados no cadastro (até a Fase 3)
+  declaredNetWorth       Decimal? @db.Decimal(14, 2)
+  declaredInvestments    Decimal? @db.Decimal(14, 2)
+  onboardingDone         Boolean  @default(false)
+  theme                  String   @default("dark")
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id            String     @id @default(cuid())
+  userId        String
+  name          String
+  cnpj          String?
+  taxRegime     TaxRegime  @default(NAO_INFORMADO)
+  accountingFee Decimal?   @db.Decimal(14, 2)
+  createdAt     DateTime   @default(now())
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contracts     Contract[]
+  taxProfiles   TaxProfile[]
+
+  @@index([userId])
+}
+
+model Institution {
+  id          String          @id @default(cuid())
+  userId      String
+  name        String
+  kind        InstitutionKind @default(HOSPITAL)
+  color       String          @default("#0f766e")
+  /// Regra padrão de pagamento de plantões: {mode:'DAYS_AFTER',days} | {mode:'MONTH_DAY',day,monthsAfter}
+  paymentRule Json?
+  notes       String?
+  archived    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contracts   Contract[]
+  shiftRates  ShiftRate[]
+  shifts      Shift[]
+  incomes     Income[]
+
+  @@index([userId])
+}
+
+model TaxProfile {
+  id          String              @id @default(cuid())
+  userId      String
+  name        String
+  scope       TaxScope
+  companyId   String?
+  description String?
+  createdAt   DateTime            @default(now())
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company     Company?            @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  versions    TaxProfileVersion[]
+  contracts   Contract[]
+
+  @@index([userId])
+}
+
+/// Regras tributárias versionadas por vigência, com fonte e referência legal.
+model TaxProfileVersion {
+  id             String        @id @default(cuid())
+  taxProfileId   String
+  validFrom      DateTime      @db.Date
+  validTo        DateTime?     @db.Date
+  /// TaxComponent[] (ver @medfinance/core/tax.ts)
+  components     Json
+  confidence     TaxConfidence @default(ESTIMATED)
+  legalReference String?
+  source         String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  taxProfile     TaxProfile    @relation(fields: [taxProfileId], references: [id], onDelete: Cascade)
+
+  @@index([taxProfileId, validFrom])
+}
+
+/// Vínculo: relação de trabalho com uma instituição (salário fixo e/ou plantões).
+model Contract {
+  id             String       @id @default(cuid())
+  userId         String
+  institutionId  String
+  companyId      String?
+  taxProfileId   String?
+  title          String
+  type           ContractType
+  /// Nulo para vínculos só de plantão
+  grossSalary    Decimal?     @db.Decimal(14, 2)
+  /// [{label, amount}] somados ao bruto (adicionais, benefícios tributáveis)
+  additions      Json         @default("[]")
+  /// [{label, amount}] descontados após impostos
+  deductions     Json         @default("[]")
+  payDays        Int[]        @default([5])
+  payMonthOffset Int          @default(1)
+  startDate      DateTime     @db.Date
+  endDate        DateTime?    @db.Date
+  trackFrom      DateTime     @db.Date
+  /// Regra de pagamento de plantões deste vínculo (sobrepõe a da instituição)
+  shiftPaymentRule Json?
+  notes          String?
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution    Institution  @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  taxProfile     TaxProfile?  @relation(fields: [taxProfileId], references: [id], onDelete: SetNull)
+  adjustments    SalaryAdjustment[]
+  shiftRates     ShiftRate[]
+  shifts         Shift[]
+  salaryPayments SalaryPayment[]
+  incomes        Income[]
+
+  @@index([userId])
+}
+
+model SalaryAdjustment {
+  id            String   @id @default(cuid())
+  contractId    String
+  effectiveDate DateTime @db.Date
+  grossSalary   Decimal  @db.Decimal(14, 2)
+  note          String?
+  contract      Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, effectiveDate])
+}
+
+/// Tabela de valores de plantão por instituição (opcionalmente por vínculo e dia da semana).
+model ShiftRate {
+  id                String      @id @default(cuid())
+  userId            String
+  institutionId     String
+  contractId        String?
+  shiftType         ShiftType
+  /// 0=domingo..6=sábado; nulo = qualquer dia
+  weekday           Int?
+  pricingMode       PricingMode @default(PER_SHIFT)
+  amount            Decimal     @db.Decimal(14, 2)
+  additionalPercent Decimal?    @db.Decimal(7, 4)
+  defaultStart      String      @default("07:00")
+  defaultEnd        String      @default("19:00")
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution       Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  contract          Contract?   @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([userId, institutionId])
+}
+
+/// Escala recorrente. Os plantões são materializados com chave única (série, data).
+model ShiftSeries {
+  id            String   @id @default(cuid())
+  userId        String
+  institutionId String
+  contractId    String?
+  /// RecurrenceRule (ver @medfinance/core/recurrence.ts)
+  rule          Json
+  /// Modelo do plantão: horários, tipo, preço etc.
+  template      Json
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shifts        Shift[]
+
+  @@index([userId])
+}
+
+model Shift {
+  id                  String       @id @default(cuid())
+  userId              String
+  institutionId       String
+  contractId          String?
+  seriesId            String?
+  unit                String?
+  label               String?
+  date                DateTime     @db.Date
+  startTime           String
+  endTime             String
+  type                ShiftType
+  status              ShiftStatus  @default(AGENDADO)
+  pricingMode         PricingMode  @default(PER_SHIFT)
+  amount              Decimal      @db.Decimal(14, 2)
+  additionalPercent   Decimal?     @db.Decimal(7, 4)
+  bonuses             Decimal?     @db.Decimal(14, 2)
+  deductions          Decimal?     @db.Decimal(14, 2)
+  /// Imposto específico do plantão; nulo => usa o do vínculo
+  taxProfileId        String?
+  taxOverride         Json?
+  confirmedTax        Decimal?     @db.Decimal(14, 2)
+  expectedPaymentDate DateTime     @db.Date
+  receivedDate        DateTime?    @db.Date
+  receivedAmount      Decimal?     @db.Decimal(14, 2)
+  notes               String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution         Institution  @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  contract            Contract?    @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  series              ShiftSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+
+  @@unique([seriesId, date])
+  @@index([userId, date])
+  @@index([userId, expectedPaymentDate])
+}
+
+/// Confirmação de recebimento de um pagamento de vínculo fixo (competência + parcela).
+model SalaryPayment {
+  id             String              @id @default(cuid())
+  userId         String
+  contractId     String
+  competence     String
+  index          Int                 @default(0)
+  status         SalaryPaymentStatus @default(RECEBIDO)
+  receivedDate   DateTime?           @db.Date
+  receivedAmount Decimal?            @db.Decimal(14, 2)
+  confirmedTax   Decimal?            @db.Decimal(14, 2)
+  createdAt      DateTime            @default(now())
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contract       Contract            @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, competence, index])
+}
+
+model Income {
+  id                  String         @id @default(cuid())
+  userId              String
+  institutionId       String?
+  contractId          String?
+  taxProfileId        String?
+  description         String
+  category            IncomeCategory
+  competenceDate      DateTime       @db.Date
+  expectedPaymentDate DateTime       @db.Date
+  grossAmount         Decimal        @db.Decimal(14, 2)
+  deductions          Decimal?       @db.Decimal(14, 2)
+  taxOverride         Json?
+  confirmedTax        Decimal?       @db.Decimal(14, 2)
+  hours               Decimal?       @db.Decimal(7, 2)
+  status              IncomeStatus   @default(PREVISTO)
+  receivedDate        DateTime?      @db.Date
+  receivedAmount      Decimal?       @db.Decimal(14, 2)
+  notes               String?
+  createdAt           DateTime       @default(now())
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution         Institution?   @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  contract            Contract?      @relation(fields: [contractId], references: [id], onDelete: SetNull)
+
+  @@index([userId, competenceDate])
+}
+
+model ExpenseCategory {
+  id            String       @id @default(cuid())
+  userId        String
+  name          String
+  scope         ExpenseScope
+  color         String       @default("#64748b")
+  isTax         Boolean      @default(false)
+  monthlyBudget Decimal?     @db.Decimal(14, 2)
+  archived      Boolean      @default(false)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses      Expense[]
+
+  @@unique([userId, name])
+}
+
+model Expense {
+  id                 String           @id @default(cuid())
+  userId             String
+  categoryId         String?
+  creditCardId       String?
+  bankAccountId      String?
+  description        String
+  amount             Decimal          @db.Decimal(14, 2)
+  scope              ExpenseScope
+  /// Data da compra/consumo (competência)
+  competenceDate     DateTime         @db.Date
+  dueDate            DateTime         @db.Date
+  paidDate           DateTime?        @db.Date
+  status             ExpenseStatus    @default(PENDENTE)
+  paymentMethod      PaymentMethod    @default(PIX)
+  isFixed            Boolean          @default(false)
+  costCenter         String?
+  installmentGroupId String?
+  installmentNumber  Int?
+  installmentCount   Int?
+  recurringGroupId   String?
+  notes              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category           ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  creditCard         CreditCard?      @relation(fields: [creditCardId], references: [id], onDelete: SetNull)
+  bankAccount        BankAccount?     @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
+  @@index([userId, competenceDate])
+  @@index([userId, dueDate])
+  @@index([installmentGroupId])
+}
+
+model CreditCard {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  brand      String?
+  closingDay Int
+  dueDay     Int
+  limit      Decimal?  @db.Decimal(14, 2)
+  archived   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses   Expense[]
+  invoicePayments CardInvoicePayment[]
+
+  @@index([userId])
+}
+
+/// Pagamento de fatura: transferência de caixa (não é nova despesa).
+model CardInvoicePayment {
+  id        String     @id @default(cuid())
+  userId    String
+  cardId    String
+  reference String
+  paidDate  DateTime   @db.Date
+  amount    Decimal    @db.Decimal(14, 2)
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card      CreditCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, reference])
+}
+
+model BankAccount {
+  id                 String      @id @default(cuid())
+  userId             String
+  name               String
+  bank               String?
+  kind               AccountKind @default(CORRENTE)
+  initialBalance     Decimal     @db.Decimal(14, 2)
+  initialBalanceDate DateTime    @db.Date
+  archived           Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses           Expense[]
+
+  @@index([userId])
+}
+
+model Goal {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  kind         String    @default("OUTRA")
+  targetAmount Decimal   @db.Decimal(14, 2)
+  currentAmount Decimal  @default(0) @db.Decimal(14, 2)
+  targetDate   DateTime? @db.Date
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Trilha de auditoria de operações relevantes (sem valores sensíveis em texto livre).
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
