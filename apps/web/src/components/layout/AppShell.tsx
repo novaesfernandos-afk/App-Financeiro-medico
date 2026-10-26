@@ -95,7 +95,7 @@ export function MonthPicker({ value, onChange }: { value: string; onChange: (ym:
   return (
     <div className="inline-flex items-center rounded-xl border bg-surface">
       <button aria-label="Mês anterior" className="p-2 text-muted hover:text-fg" onClick={() => onChange(shiftMonth(value, -1))}><ChevronLeft className="h-4 w-4" /></button>
-      <span className="min-w-[132px] text-center text-sm font-medium capitalize" data-testid="month-label">{fmtMonth(value)}</span>
+      <span className="min-w-[132px] text-center text-sm font-medium" data-testid="month-label">{fmtMonth(value)}</span>
       <button aria-label="Próximo mês" className="p-2 text-muted hover:text-fg" onClick={() => onChange(shiftMonth(value, 1))}><ChevronRight className="h-4 w-4" /></button>
     </div>
   );

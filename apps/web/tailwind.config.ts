@@ -28,8 +28,10 @@ export default {
       borderRadius: { xl: '0.875rem', '2xl': '1.125rem' },
       keyframes: {
         'fade-in': { from: { opacity: '0', transform: 'translateY(4px)' }, to: { opacity: '1', transform: 'none' } },
+        // Só opacidade: não pode sobrescrever o transform que centraliza diálogos
+        fade: { from: { opacity: '0' }, to: { opacity: '1' } },
       },
-      animation: { 'fade-in': 'fade-in .22s ease-out both' },
+      animation: { 'fade-in': 'fade-in .22s ease-out both', fade: 'fade .18s ease-out both' },
     },
   },
   plugins: [],

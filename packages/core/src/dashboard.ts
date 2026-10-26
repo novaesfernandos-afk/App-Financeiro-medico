@@ -102,14 +102,17 @@ function breakdown(items: LedgerItem[], keyOf: (i: LedgerItem) => string): Break
     .sort((a, b) => money(b.gross).comparedTo(money(a.gross)));
 }
 
-/** Saldo de caixa (previsto se includePending) até a data, a partir dos saldos iniciais. */
+/**
+ * Saldo de caixa (previsto se includePending) até a data, a partir dos saldos iniciais.
+ * O saldo inicial vale para o INÍCIO do dia de referência: lançamentos nessa data já contam.
+ */
 export function cashBalance(ledger: LedgerItem[], openings: OpeningBalance[], until: ISODate, includePending: boolean): string | null {
   if (openings.length === 0) return null;
   const baseline = openings.map((o) => o.date).sort().at(-1)!;
   let total = sum(openings.map((o) => o.amount));
   for (const i of ledger) {
     if (!i.affectsCash || !active(i)) continue;
-    if (i.cashDate <= baseline || i.cashDate > until) continue;
+    if (i.cashDate < baseline || i.cashDate > until) continue;
     if (!includePending && i.cashStatus !== 'DONE') continue;
     total = i.direction === 'IN' ? total.plus(money(i.net)) : total.minus(money(i.net));
   }

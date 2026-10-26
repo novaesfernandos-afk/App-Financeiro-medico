@@ -31,7 +31,7 @@ export function GroupedBars({ data, series, xKey, xFormatter, height = 240 }: {
       <BarChart data={data} barGap={2} barCategoryGap="22%" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
         <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
         <XAxis dataKey={xKey} {...axis} tickFormatter={xFormatter} interval="preserveStartEnd" />
-        <YAxis {...axis} width={56} tickFormatter={(v) => fmtBRL(v, { compact: true })} />
+        <YAxis {...axis} width={68} tickFormatter={(v) => fmtBRL(v, { compact: true })} />
         <Tooltip cursor={{ fill: 'hsl(var(--surface-2))' }} content={<ChartTooltip labelFormatter={xFormatter} />} />
         <Legend iconType="square" iconSize={9} wrapperStyle={{ fontSize: 11, color: 'hsl(var(--muted))' }} />
         {series.map((s) => <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color} radius={[4, 4, 0, 0]} maxBarSize={22} />)}

@@ -17,7 +17,7 @@ import { fmtBRL, fmtHours, fmtMonth } from '@/lib/format';
 import { CONTRACT_TYPE_LABEL } from '@/lib/labels';
 import { useInstitutions, useList } from '@/lib/queries';
 
-const shortMonth = (m: string) => fmtMonth(m, 'short').replace(' de ', '/').replace('.', '');
+const shortMonth = (m: string) => fmtMonth(m, 'short').toLowerCase().replace(' de ', '/').replace('.', '');
 
 export default function Dashboard() {
   const [month, setMonth] = useMonth();
@@ -37,7 +37,7 @@ export default function Dashboard() {
     <div>
       <PageHeader
         title="Painel"
-        subtitle={<span className="capitalize">{fmtMonth(month)} · competência (trabalho realizado) e caixa (dinheiro efetivo)</span>}
+        subtitle={<>{fmtMonth(month)} · competência (trabalho realizado) e caixa (dinheiro efetivo)</>}
         actions={
           <>
             <MonthPicker value={month} onChange={setMonth} />
@@ -116,7 +116,7 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {d.forecast.map((f: any) => (
                   <div key={f.month} className="rounded-xl bg-surface-2 p-3">
-                    <p className="text-xs font-medium capitalize">{fmtMonth(f.month)}</p>
+                    <p className="text-xs font-medium">{fmtMonth(f.month)}</p>
                     <div className="mt-2 grid grid-cols-3 gap-2 text-xs tabular">
                       <div><p className="text-muted">Entradas</p><p className="font-medium">{fmtBRL(f.expectedIn, { compact: true })}</p></div>
                       <div><p className="text-muted">Saídas</p><p className="font-medium">{fmtBRL(f.expectedOut, { compact: true })}</p></div>

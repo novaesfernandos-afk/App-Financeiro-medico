@@ -14,9 +14,11 @@ export function fmtDate(iso: string | null | undefined, opts: Intl.DateTimeForma
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('pt-BR', { ...opts, timeZone: 'UTC' });
 }
 
+export const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function fmtMonth(ym: string, style: 'long' | 'short' = 'long') {
   const [y, m] = ym.split('-').map(Number) as [number, number];
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('pt-BR', { month: style, year: 'numeric', timeZone: 'UTC' });
+  return cap(new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('pt-BR', { month: style, year: 'numeric', timeZone: 'UTC' }));
 }
 
 export function fmtHours(h: string | null | undefined) {

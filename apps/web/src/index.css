@@ -80,7 +80,8 @@
   --fc-event-border-color: transparent;
   font-size: 0.82rem;
 }
-.fc .fc-toolbar-title { font-size: 1.05rem; font-weight: 600; text-transform: capitalize; }
+.fc .fc-toolbar-title { font-size: 1.05rem; font-weight: 600; }
+.fc .fc-toolbar-title::first-letter, .fc .fc-multimonth-title::first-letter { text-transform: uppercase; }
 .fc .fc-button { border-radius: 0.6rem; font-weight: 500; text-transform: capitalize; padding: 0.35rem 0.7rem; box-shadow: none !important; }
 .fc .fc-button-primary:not(:disabled).fc-button-active { color: hsl(var(--primary-fg)); }
 .fc .fc-daygrid-day-number, .fc .fc-col-header-cell-cushion { color: hsl(var(--muted)); text-decoration: none; }
@@ -88,7 +89,7 @@
 .fc .fc-event { border-radius: 6px; padding: 0 3px; cursor: pointer; }
 .fc .fc-daygrid-event { font-size: 0.72rem; }
 .fc .fc-multimonth { border: none; }
-.fc .fc-multimonth-title { font-size: 0.9rem; text-transform: capitalize; }
+.fc .fc-multimonth-title { font-size: 0.9rem; }
 .fc-theme-standard .fc-scrollgrid { border-radius: 0.75rem; overflow: hidden; }
 @media (max-width: 640px) {
   .fc .fc-toolbar { flex-direction: column; gap: 0.5rem; }

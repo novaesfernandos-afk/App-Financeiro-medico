@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { CertaintyDot, PageHeader, Spinner } from '@/components/ui/misc';
 import { api, qs } from '@/lib/api';
-import { fmtBRL, fmtDate, todayISO } from '@/lib/format';
+import { cap, fmtBRL, fmtDate, todayISO } from '@/lib/format';
 import { CALENDAR_CATEGORY, CERTAINTY_LABEL } from '@/lib/labels';
 import { cn } from '@/lib/utils';
 
@@ -115,7 +115,7 @@ export default function CalendarPage() {
         </Card>
 
         <Card className="h-fit xl:sticky xl:top-6" data-testid="day-panel">
-          <CardHeader title={<span className="capitalize">{fmtDate(selected, { weekday: 'long', day: '2-digit', month: 'long' })}</span>} subtitle="Resumo do dia (regime de caixa)" />
+          <CardHeader title={cap(fmtDate(selected, { weekday: 'long', day: '2-digit', month: 'long' }))} subtitle="Resumo do dia (regime de caixa)" />
           {!d ? <Spinner /> : (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">

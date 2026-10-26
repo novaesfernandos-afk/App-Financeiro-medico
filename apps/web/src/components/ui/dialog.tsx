@@ -9,10 +9,10 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   return (
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
-        <D.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-fade-in" />
+        <D.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-fade" />
         <D.Content
           className={cn(
-            'fixed z-50 flex max-h-[92dvh] w-full flex-col border bg-surface shadow-2xl focus:outline-none data-[state=open]:animate-fade-in',
+            'fixed z-50 flex max-h-[92dvh] w-full flex-col border bg-surface shadow-2xl focus:outline-none data-[state=open]:animate-fade',
             'bottom-0 left-0 rounded-t-2xl sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl',
             wide ? 'sm:max-w-2xl' : 'sm:max-w-lg',
           )}

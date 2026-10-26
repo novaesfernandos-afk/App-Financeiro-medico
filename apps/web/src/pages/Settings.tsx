@@ -193,7 +193,7 @@ function FinanceTab() {
           { name: 'bank', label: 'Banco', type: 'text' },
           { name: 'kind', label: 'Tipo', type: 'select', required: true, options: [{ value: 'CORRENTE', label: 'Corrente' }, { value: 'POUPANCA', label: 'Poupança' }, { value: 'PAGAMENTO', label: 'Conta de pagamento' }, { value: 'INVESTIMENTO', label: 'Investimento' }, { value: 'OUTRA', label: 'Outra' }] },
           { name: 'initialBalance', label: 'Saldo na data de referência', type: 'money', required: true },
-          { name: 'initialBalanceDate', label: 'Data de referência', type: 'date', required: true, hint: 'Lançamentos após esta data alteram o saldo' },
+          { name: 'initialBalanceDate', label: 'Data de referência', type: 'date', required: true, hint: 'Saldo no início do dia; lançamentos a partir desta data alteram o saldo' },
         ]}
         render={(a) => <><p className="font-medium">{a.name}</p><p className="text-xs text-muted">{a.bank ?? '—'} · {fmtBRL(a.initialBalance)} em {fmtDate(a.initialBalanceDate)}</p></>} />
       <SimpleCrud title="Cartões de crédito" endpoint="/cards" emptyText="Nenhum cartão cadastrado."
