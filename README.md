@@ -37,6 +37,10 @@ npm run dev                          # API :3333 + web :5173 (proxy /api)
 
 Acesse http://localhost:5173, crie uma conta e siga o assistente inicial. Não há dados de demonstração: tudo o que aparece foi cadastrado por você.
 
+## Publicar na Netlify
+
+O repositório já está pronto para deploy na Netlify (site + API como Function + PostgreSQL via Netlify DB/Neon). Passo a passo em [docs/11-deploy-netlify.md](docs/11-deploy-netlify.md).
+
 ## Testes
 
 ```bash
@@ -62,5 +66,6 @@ O banco de testes precisa ter "test" no nome (proteção contra uso acidental do
 | [08 — Jornadas](docs/08-jornadas.md) | Jornadas do usuário |
 | [09 — Segurança e LGPD](docs/09-seguranca-lgpd.md) | Controles implementados e pendentes |
 | [10 — Integrações](docs/10-integracoes.md) | Dependências externas e credenciais |
+| [11 — Deploy Netlify](docs/11-deploy-netlify.md) | Publicação na Netlify |
 
 Equipe de agentes de desenvolvimento: [.claude/agents](.claude/agents).

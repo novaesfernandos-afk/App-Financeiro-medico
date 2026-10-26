@@ -7,7 +7,9 @@
 //    pelo @medfinance/core a partir dos insumos + perfil tributário vigente.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "rhel-openssl-3.0.x" = runtime das Netlify Functions (AWS Lambda, Amazon Linux 2023)
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
