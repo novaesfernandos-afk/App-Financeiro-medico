@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens — MedFinance AI
+ * Grafite (neutros), azul-petróleo (primária) e verde-esmeralda (acento/positivo).
+ * Valores em HSL sem "hsl()" para permitir opacidade via Tailwind.
+ */
+:root {
+  --bg: 200 14% 97%;
+  --surface: 0 0% 100%;
+  --surface-2: 200 16% 94%;
+  --border: 200 12% 86%;
+  --fg: 200 18% 10%;
+  --muted: 200 8% 40%;
+  --primary: 192 72% 28%;      /* azul-petróleo */
+  --primary-fg: 0 0% 100%;
+  --accent: 160 84% 32%;       /* esmeralda */
+  --positive: 160 84% 30%;
+  --negative: 0 72% 46%;
+  --warning: 35 92% 40%;
+  --info: 205 80% 42%;
+  /* Séries de gráficos — paleta categórica validada (CVD) da skill dataviz */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 200 14% 5%;            /* grafite profundo */
+  --surface: 200 12% 8%;
+  --surface-2: 200 10% 12%;
+  --border: 200 9% 17%;
+  --fg: 200 14% 93%;
+  --muted: 200 7% 60%;
+  --primary: 190 70% 42%;
+  --primary-fg: 200 20% 6%;
+  --accent: 158 64% 46%;
+  --positive: 158 64% 48%;
+  --negative: 0 78% 64%;
+  --warning: 38 92% 56%;
+  --info: 205 85% 62%;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  color-scheme: dark;
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { min-height: 100%; }
+  body {
+    @apply bg-bg text-fg antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  :focus-visible { @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-bg; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* ---------- FullCalendar integrado aos tokens ---------- */
+.fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-page-bg-color: hsl(var(--surface));
+  --fc-neutral-bg-color: hsl(var(--surface-2));
+  --fc-today-bg-color: hsl(var(--primary) / 0.10);
+  --fc-list-event-hover-bg-color: hsl(var(--surface-2));
+  --fc-button-bg-color: hsl(var(--surface-2));
+  --fc-button-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--fg));
+  --fc-button-hover-bg-color: hsl(var(--border));
+  --fc-button-hover-border-color: hsl(var(--border));
+  --fc-button-active-bg-color: hsl(var(--primary));
+  --fc-button-active-border-color: hsl(var(--primary));
+  --fc-event-border-color: transparent;
+  font-size: 0.82rem;
+}
+.fc .fc-toolbar-title { font-size: 1.05rem; font-weight: 600; text-transform: capitalize; }
+.fc .fc-button { border-radius: 0.6rem; font-weight: 500; text-transform: capitalize; padding: 0.35rem 0.7rem; box-shadow: none !important; }
+.fc .fc-button-primary:not(:disabled).fc-button-active { color: hsl(var(--primary-fg)); }
+.fc .fc-daygrid-day-number, .fc .fc-col-header-cell-cushion { color: hsl(var(--muted)); text-decoration: none; }
+.fc .fc-daygrid-day.fc-day-selected { background: hsl(var(--accent) / 0.12); }
+.fc .fc-event { border-radius: 6px; padding: 0 3px; cursor: pointer; }
+.fc .fc-daygrid-event { font-size: 0.72rem; }
+.fc .fc-multimonth { border: none; }
+.fc .fc-multimonth-title { font-size: 0.9rem; text-transform: capitalize; }
+.fc-theme-standard .fc-scrollgrid { border-radius: 0.75rem; overflow: hidden; }
+@media (max-width: 640px) {
+  .fc .fc-toolbar { flex-direction: column; gap: 0.5rem; }
+  .fc .fc-daygrid-event .fc-event-title { display: none; }
+}
