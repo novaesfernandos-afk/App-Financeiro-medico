@@ -15,7 +15,7 @@ O build (`scripts/netlify-build.sh`) gera o Prisma Client, **aplica as migraçõ
 ### 1. Criar o site
 1. Acesse https://app.netlify.com → **Add new project → Import an existing project → GitHub**.
 2. Escolha o repositório `App-Financeiro-medico` e a branch (`main` depois do merge, ou `claude/medfinance-fase-1-2`).
-3. Não altere as configurações de build: elas vêm do `netlify.toml`. O primeiro deploy vai falhar pedindo o banco — é esperado.
+3. Não altere as configurações de build: elas vêm do `netlify.toml`. Enquanto o banco e os segredos não estiverem configurados, o site publica uma tela de **"Configuração pendente"** listando o que falta (o build não falha).
 
 ### 2. Banco de dados (escolha uma opção)
 

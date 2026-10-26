@@ -1,9 +1,11 @@
+import { useQuery } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { PageLoader } from './components/ui/misc';
 import { useAuth } from './hooks/useAuth';
 import { AuthPage } from './pages/Auth';
+import { SetupPending } from './pages/SetupPending';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const CalendarPage = lazy(() => import('./pages/Calendar'));
@@ -17,7 +19,16 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 export function App() {
   const { me, loading } = useAuth();
   const location = useLocation();
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: async () => {
+      const r = await fetch('/api/health');
+      return r.status === 503 ? ((await r.json()) as { setupRequired?: boolean; missing?: string[] }) : null;
+    },
+    staleTime: Infinity,
+  });
 
+  if (health.data?.setupRequired) return <SetupPending missing={health.data.missing ?? []} />;
   if (loading) return <div className="flex min-h-dvh items-center justify-center"><PageLoader /></div>;
 
   if (!me) {

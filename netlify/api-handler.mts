@@ -33,7 +33,20 @@ function getApp() {
   return appPromise;
 }
 
+/** Lista o que falta configurar no painel da Netlify (sem expor valores). */
+function missingConfig(): string[] {
+  const missing: string[] = [];
+  if (!process.env.DATABASE_URL && !process.env.NETLIFY_DATABASE_URL) missing.push('Banco de dados (Netlify DB ou DATABASE_URL)');
+  if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 16) missing.push('COOKIE_SECRET');
+  if (!/^[0-9a-f]{64}$/i.test(process.env.ENCRYPTION_KEY ?? '') || /^0+$/.test(process.env.ENCRYPTION_KEY ?? '')) missing.push('ENCRYPTION_KEY (64 caracteres hexadecimais)');
+  return missing;
+}
+
 export default async (req: Request): Promise<Response> => {
+  const missing = missingConfig();
+  if (missing.length) {
+    return Response.json({ error: `Configuração pendente: ${missing.join(', ')}`, setupRequired: true, missing }, { status: 503 });
+  }
   let app: FastifyInstance;
   try {
     app = await getApp();
