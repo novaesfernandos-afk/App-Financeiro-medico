@@ -3,8 +3,13 @@
   "private": true,
   "version": "0.2.0",
   "description": "MedFinance AI — gestão financeira inteligente para médicos brasileiros",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=20" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "npm run dev -w @medfinance/api & npm run dev -w @medfinance/web",
     "dev:api": "npm run dev -w @medfinance/api",
@@ -15,5 +20,8 @@
     "test:e2e": "npm run test:e2e -w @medfinance/web",
     "db:push": "npm run db:push -w @medfinance/api",
     "db:migrate": "npm run db:migrate -w @medfinance/api"
+  },
+  "dependencies": {
+    "@netlify/database": "^2.0.1"
   }
 }
