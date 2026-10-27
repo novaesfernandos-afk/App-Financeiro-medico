@@ -2,14 +2,14 @@
  * Handler da API (compilado por scripts/build-netlify-function.mjs para netlify/build/handler.mjs).
  * API do MedFinance como Netlify Function (v2, Web API Request/Response).
  * Reaproveita o mesmo app Fastify de apps/api via `inject` — sem servidor HTTP.
- * Banco: DATABASE_URL ou Netlify DB (Neon) via NETLIFY_DATABASE_URL.
+ * Banco: DATABASE_URL (externo) ou Netlify Database via NETLIFY_DB_URL.
  */
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../apps/api/src/app';
 import { loadEnv } from '../apps/api/src/env';
 
 function databaseUrl(): string | undefined {
-  const raw = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+  const raw = process.env.DATABASE_URL || process.env.NETLIFY_DB_URL;
   if (!raw) return undefined;
   // Conexões serverless: uma conexão por instância, compatível com o pooler do Neon
   const url = new URL(raw);
@@ -36,7 +36,7 @@ function getApp() {
 /** Lista o que falta configurar no painel da Netlify (sem expor valores). */
 function missingConfig(): string[] {
   const missing: string[] = [];
-  if (!process.env.DATABASE_URL && !process.env.NETLIFY_DATABASE_URL) missing.push('Banco de dados (Netlify DB ou DATABASE_URL)');
+  if (!process.env.DATABASE_URL && !process.env.NETLIFY_DB_URL) missing.push('Banco de dados (Data & storage → Database)');
   if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 16) missing.push('COOKIE_SECRET');
   if (!/^[0-9a-f]{64}$/i.test(process.env.ENCRYPTION_KEY ?? '') || /^0+$/.test(process.env.ENCRYPTION_KEY ?? '')) missing.push('ENCRYPTION_KEY (64 caracteres hexadecimais)');
   return missing;

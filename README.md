@@ -39,7 +39,7 @@ Acesse http://localhost:5173, crie uma conta e siga o assistente inicial. Não h
 
 ## Publicar na Netlify
 
-O repositório já está pronto para deploy na Netlify (site + API como Function + PostgreSQL via Netlify DB/Neon). Passo a passo em [docs/11-deploy-netlify.md](docs/11-deploy-netlify.md).
+O repositório já está pronto para deploy na Netlify (site + API como Function + PostgreSQL via Netlify Database). Passo a passo em [docs/11-deploy-netlify.md](docs/11-deploy-netlify.md).
 
 ## Testes
 
