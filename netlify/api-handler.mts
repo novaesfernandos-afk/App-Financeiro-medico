@@ -7,6 +7,7 @@
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../apps/api/src/app';
 import { loadEnv } from '../apps/api/src/env';
+import { applyPendingMigrations } from './migrate.mts';
 
 function databaseUrl(): string | undefined {
   const raw = process.env.DATABASE_URL || process.env.NETLIFY_DB_URL;
@@ -26,6 +27,8 @@ function getApp() {
     appPromise = (async () => {
       const app = await buildApp(loadEnv({ ...process.env, NODE_ENV: 'production' }));
       await app.ready();
+      const applied = await applyPendingMigrations(app.prisma);
+      if (applied.length) console.log(`Migrações aplicadas: ${applied.join(', ')}`);
       return app;
     })();
     appPromise.catch(() => { appPromise = null; });

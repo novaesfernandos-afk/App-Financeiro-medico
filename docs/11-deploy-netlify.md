@@ -8,7 +8,7 @@ Arquitetura em produção, tudo num único domínio (`https://<seu-site>.netlify
 | API (`/api/*`) | Netlify Function (`netlify/functions/api.mjs`), reaproveitando o mesmo Fastify de `apps/api` |
 | Banco PostgreSQL | Netlify DB (Neon) **ou** qualquer PostgreSQL gerenciado (ex.: Neon, Supabase) |
 
-O build (`scripts/netlify-build.sh`) gera o Prisma Client, **aplica as migrações** no banco, compila a Function e o frontend. A cada `git push` na branch configurada, a Netlify publica de novo.
+O build (`scripts/netlify-build.sh`) gera o Prisma Client e compila a Function e o frontend; a Function **aplica as migrações pendentes** no primeiro acesso. A cada `git push` na branch configurada, a Netlify publica de novo.
 
 ## Passo a passo (uma vez)
 
@@ -19,12 +19,12 @@ O build (`scripts/netlify-build.sh`) gera o Prisma Client, **aplica as migraçõ
 
 ### 2. Banco de dados (escolha uma opção)
 
-**Opção A — Netlify Database (recomendada):** no projeto, **Data & storage → Database → "Or create a database manually instead"** (não use o agente de IA dessa tela: ele alteraria o código). A Netlify passa a fornecer a variável `NETLIFY_DB_URL` para o build e as Functions; o build aplica as migrações do Prisma nesse banco (`prisma migrate deploy`). Deploy previews ganham um banco "branch" isolado, copiado da produção.
+**Opção A — Netlify Database (recomendada):** no projeto, **Data & storage → Database → "Or create a database manually instead"** (não use o agente de IA dessa tela: ele alteraria o código). A Netlify passa a fornecer a variável `NETLIFY_DB_URL` para as Functions. As migrações do Prisma vêm embutidas na Function e são aplicadas por ela no primeiro acesso após cada deploy (`netlify/migrate.mts`, compatível com `prisma migrate`, com trava contra execução concorrente). Deploy previews ganham um banco "branch" isolado, copiado da produção.
 > O Netlify Database consome créditos do plano (computação e tráfego).
 
 **Opção B — PostgreSQL externo (Neon, Supabase…):** crie o banco e copie a *connection string* **direta** (sem pooler). Em **Environment variables**, crie `DATABASE_URL`.
 
-> Não usamos o diretório automático `netlify/database/migrations`: as migrações vivem só em `apps/api/prisma/migrations` e são aplicadas pelo build, evitando dois sistemas concorrentes.
+> Não usamos o diretório automático `netlify/database/migrations` (nos testes, a Netlify não o aplicou): as migrações vivem só em `apps/api/prisma/migrations`.
 
 ### 3. Segredos
 Em **Project configuration → Environment variables**, crie (marque como *secret*):

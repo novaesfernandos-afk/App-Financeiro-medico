@@ -19,7 +19,7 @@ Monorepo (npm workspaces): `packages/core` (motor financeiro puro), `apps/api` (
 - `npm run test -w @medfinance/api` — integração (requer PostgreSQL e `TEST_DATABASE_URL` com "test" no nome)
 - `npm run test:e2e` — Playwright (requer `npm run dev`)
 - `npm run typecheck`
-- Migrações: só em `apps/api/prisma/migrations` (o build da Netlify aplica com `prisma migrate deploy`).
+- Migrações: só em `apps/api/prisma/migrations` (na Netlify, a Function aplica no cold start via `netlify/migrate.mts`). Escreva migrações compatíveis com a versão anterior do código.
 - Nunca rode `prisma db push --force-reset` / `migrate reset` sem autorização explícita.
 
 ## Convenções
