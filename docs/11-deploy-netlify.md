@@ -19,12 +19,12 @@ O build (`scripts/netlify-build.sh`) gera o Prisma Client, **aplica as migraçõ
 
 ### 2. Banco de dados (escolha uma opção)
 
-**Opção A — Netlify Database (recomendada):** no projeto, **Data & storage → Database → "Or create a database manually instead"** (não use o agente de IA dessa tela: ele alteraria o código). A Netlify passa a fornecer a variável `NETLIFY_DB_URL` para o build e as Functions, e **aplica automaticamente** as migrações de `netlify/database/migrations` antes de publicar cada deploy. Deploy previews ganham um banco "branch" isolado, copiado da produção.
+**Opção A — Netlify Database (recomendada):** no projeto, **Data & storage → Database → "Or create a database manually instead"** (não use o agente de IA dessa tela: ele alteraria o código). A Netlify passa a fornecer a variável `NETLIFY_DB_URL` para o build e as Functions; o build aplica as migrações do Prisma nesse banco (`prisma migrate deploy`). Deploy previews ganham um banco "branch" isolado, copiado da produção.
 > O Netlify Database consome créditos do plano (computação e tráfego).
 
-**Opção B — PostgreSQL externo (Neon, Supabase…):** crie o banco e copie a *connection string* **direta** (sem pooler). Em **Environment variables**, crie `DATABASE_URL`. Nesse caso o build aplica as migrações com `prisma migrate deploy`.
+**Opção B — PostgreSQL externo (Neon, Supabase…):** crie o banco e copie a *connection string* **direta** (sem pooler). Em **Environment variables**, crie `DATABASE_URL`.
 
-> As migrações existem em dois lugares — `apps/api/prisma/migrations` (fonte da verdade, gerada pelo Prisma) e `netlify/database/migrations` (cópia lida pela Netlify). O build falha se as duas divergirem: ao criar uma migração nova, copie a pasta para `netlify/database/migrations`.
+> Não usamos o diretório automático `netlify/database/migrations`: as migrações vivem só em `apps/api/prisma/migrations` e são aplicadas pelo build, evitando dois sistemas concorrentes.
 
 ### 3. Segredos
 Em **Project configuration → Environment variables**, crie (marque como *secret*):
@@ -49,7 +49,7 @@ Em **Project configuration → Environment variables**, crie (marque como *secre
 ## Verificado neste repositório
 
 - Function empacotada com `@netlify/zip-it-and-ship-it` (a mesma ferramenta da Netlify) e executada isoladamente: cadastro, cookie `Secure`, plantão, dashboard, 404 e 401 corretos.
-- Simulação do Netlify Database: SQL de `netlify/database/migrations` aplicado num banco vazio, build com `NETLIFY_DB_URL` e Function executada contra ele com sucesso.
+- Deploy real na Netlify (projeto medfiance) validado com cadastro, plantão e painel.
 
 ## Limitações do plano gratuito
 

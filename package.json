@@ -20,8 +20,5 @@
     "test:e2e": "npm run test:e2e -w @medfinance/web",
     "db:push": "npm run db:push -w @medfinance/api",
     "db:migrate": "npm run db:migrate -w @medfinance/api"
-  },
-  "dependencies": {
-    "@netlify/database": "^2.0.1"
   }
 }
